@@ -1,0 +1,212 @@
+﻿
+<div class="row">
+    <div class="col-md-5 shadow-lg p-2">
+        <h3 class="text-primary text-center">Student Record</h3>
+        <table class="table table-borderless">
+            <tr>
+                <td>
+                    Student Roll :
+                </td>
+                <td>
+                    <input type="hidden" id="stdId"/>
+                    <input type="text" id="stdRoll" required class="form-control" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Student Name :
+                </td>
+                <td><input type="text" id="stdName" required class="form-control" /></td>
+            </tr>
+            <tr>
+                <td>
+                    Department :
+                </td>
+                <td>
+                    <input type="text" id="stdDpt" required class="form-control" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input id="saveBtn" type="button" value="Create" class="btn btn-primary" />
+                    <input id="updateBtn" type="button" value="Update" class="btn btn-info ms-2" />
+                </td>
+                <td></td>
+            </tr>
+        </table>
+    </div>
+    <div class="col-md-6 offset-md-1 p-2">
+        <table class="table table-bordered shadow-lg table-primary">
+            <thead>
+                <tr>
+                    <th>Roll</th>
+                    <th>StudentName</th>
+                    <th>Department</th>
+                    <th> --Action-- </th>
+                </tr>
+            </thead>
+            <tbody id="StudentDataTable">
+            </tbody>
+        </table>
+    </div>
+
+</div>
+@section Scripts {
+    <script>
+        $(document).ready(() => {
+            // Retrive All student
+            GetAll();
+
+            // show create/save button
+            $("#saveBtn").show();
+            $("#updateBtn").hide();
+
+            // Create Student
+            $("#saveBtn").click(function(){
+                SaveData();
+            });
+
+            // Update Student
+            $("#updateBtn").click(function () {
+  
+                Update();
+            });
+        })
+        // GetAll Data
+        function GetAll() {
+            
+            $.ajax({
+                method: 'get',
+                url: '/Student/Get',
+                success: data => {
+                    let tr = "";
+                    $.each(data, (index, obj) => {
+
+                        tr += ` <tr>
+                                <td> ${obj.roll} </td>
+                                <td> ${obj.studentName} </td> 
+                                <td> ${obj.department} </td>
+                                <td> <input type="button" class="btn btn-warning" value="Edit" onclick="Edit(${obj.id})"/>
+                                <input type="button" class="btn btn-danger ms-2" value="Delete" onclick="Delete(${obj.id})"/> </td>
+                                </tr> `
+
+                    })
+                    $("#StudentDataTable").html(tr);
+                } 
+            })// ajax end
+            
+        } // get all Data end
+
+        // Create Action
+        function SaveData() {
+            // get data from input field
+            let student = {
+                Roll: $("#stdRoll").val(),
+                StudentName: $("#stdName").val(),
+                Department: $("#stdDpt").val()
+            }
+            // calling ajax
+            $.ajax({
+                method: 'post',
+                url: '/Student/Post',
+                data: student,
+                success: function (res) {
+                    if (res) {
+                        // get all data
+                        GetAll();
+                        ClearAllField();
+                    }
+                    else {
+                        alert("Somthing Went Wrong")
+                    }
+                },
+                error: e => {
+                    console.log(e);
+                    alert("Error")
+                }
+            })
+        }// end save/create data
+
+        // ---------------------get data for edit--------------
+        function Edit(id) {
+            $.ajax({
+                method: 'get',
+                url: '/Student/Edit/' + id,
+                success: res => {
+
+                     $("#stdId").val(res.id)
+                     $("#stdRoll").val(res.roll)
+                     $("#stdName").val(res.studentName)
+                     $("#stdDpt").val(res.department)
+
+                    $("#saveBtn").hide();
+                    $("#updateBtn").show();
+                },
+                error : e => {
+                    console.log(e);
+                    alert("Error Occoured for Edit")
+                }
+            })
+        }// edit itm end
+
+        // ---------------------Update Data--------------
+        function Update(id) {
+            // get data from input field
+            let student = {
+                Id: $("#stdId").val(),
+                Roll: $("#stdRoll").val(),
+                StudentName: $("#stdName").val(),
+                Department: $("#stdDpt").val()
+            }
+            // calling ajax
+            $.ajax({
+                method: 'put',
+                url: '/Student/Update',
+                data: student,
+                success: function (res) {
+                    if (res) {
+                        // get all data
+                        GetAll();
+                        ClearAllField();
+                        $("#saveBtn").show();
+                        $("#updateBtn").hide();
+                    }
+                    else {
+                        alert("Somthing Went Wrong")
+                    }
+                },
+                error: e => {
+                    console.log(e);
+                    alert("Error While Updating Student")
+                }
+            })
+        }// end update data
+
+        // ---------Delete-------
+        function Delete(id) {
+            $.ajax({
+                method: 'delete',
+                url : '/Student/Delete/' + id,
+                success: res => {
+                    if (res) {
+                        GetAll();
+                    }
+                    else {
+                        alert("Somthing went wrong")
+                    }
+                },
+                error : e => {
+                    console.log(e);
+                    alert("Error Occourd While Deleting This Student")
+                }
+            })
+        }
+
+        // ---------- Clear all field-------
+        function ClearAllField(){
+                 $("#stdRoll").val(''),
+                 $("#stdName").val(''),
+                 $("#stdDpt").val('')
+        }
+    </script>
+}
